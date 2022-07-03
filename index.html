@@ -6,12 +6,13 @@
   </head>
   <body>
     <script type="module">
-      import init, {greet} from "./pkg/snake_game.js";
+      import init, {run} from "./pkg/snake_game.js";
       init()
         .then(() => {
-          greet("WASM")
+          run()
         });
     </script>
+    <div id="root" style="width: 600px; height: 400px;">
   </body>
 </html>
 
