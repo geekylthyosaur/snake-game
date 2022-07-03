@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Snake Game</title>
+  </head>
+  <body>
+    <script type="module">
+      import init, {greet} from "./pkg/snake_game.js";
+      init()
+        .then(() => {
+          greet("WASM")
+        });
+    </script>
+  </body>
+</html>
+
