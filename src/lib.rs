@@ -1,6 +1,9 @@
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{window, HtmlCanvasElement, KeyboardEvent, CanvasRenderingContext2d};
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 struct Core {
     snake: Snake,
 }
@@ -130,9 +133,6 @@ impl Direction {
         }
     }
 }
-
-use std::rc::Rc;
-use std::cell::RefCell;
 
 #[wasm_bindgen(start)]
 pub fn run() {
