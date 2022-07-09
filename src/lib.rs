@@ -1,8 +1,8 @@
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{window, HtmlCanvasElement, KeyboardEvent, CanvasRenderingContext2d};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
 
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 struct Core {
     snake: Snake,
@@ -26,13 +26,15 @@ struct Cell {
 
 impl Core {
     fn setup() -> Self {
-        Self { snake: Snake::new() }
+        Self {
+            snake: Snake::new(),
+        }
     }
 }
 
 impl Snake {
     fn new() -> Self {
-        Self { 
+        Self {
             cells: vec![
                 Cell::new(CellType::Head, Coords::new(4, 0)),
                 Cell::new(CellType::Middle, Coords::new(3, 0)),
@@ -46,23 +48,24 @@ impl Snake {
 
     fn move_to(&mut self, d: Direction) -> () {
         let mut prev_cell_coords = Coords::new(-1, -1);
-        if !self.direction.is_same_or_opposite(&d) { self.direction = d.clone(); }
+        if !self.direction.is_same_or_opposite(&d) {
+            self.direction = d.clone();
+        }
         for c in self.cells.iter_mut() {
             match c.r#type {
-                CellType::Head => { 
+                CellType::Head => {
                     prev_cell_coords = c.coords;
-                    if self.direction.is_same_or_opposite(&d) { 
-                        c.move_at(c.coords + self.direction.value()); 
+                    if self.direction.is_same_or_opposite(&d) {
+                        c.move_at(c.coords + self.direction.value());
                     } else {
                         c.move_at(c.coords + d.value());
                     }
-                },
-                CellType::Middle
-                | CellType::Tail => {
+                }
+                CellType::Middle | CellType::Tail => {
                     let tmp = c.coords;
                     c.move_at(prev_cell_coords);
                     prev_cell_coords = tmp;
-                },
+                }
             }
         }
     }
@@ -88,8 +91,8 @@ impl std::ops::Add<Coords> for Coords {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        Self { 
-            x: self.x + other.x, 
+        Self {
+            x: self.x + other.x,
             y: self.y + other.y,
         }
     }
@@ -120,8 +123,7 @@ enum CellType {
 
 impl Direction {
     fn is_same_or_opposite(&self, other: &Self) -> bool {
-        self == other
-        || self.value() + other.value() == Coords::new(0, 0)
+        self == other || self.value() + other.value() == Coords::new(0, 0)
     }
 
     fn value(&self) -> Coords {
@@ -138,40 +140,50 @@ impl Direction {
 pub fn run() {
     let core = Rc::new(RefCell::new(Core::setup()));
 
-    let document = window()
-        .unwrap()
-        .document()
-        .unwrap();
+    let document = document();
 
-    let canvas = Rc::new(RefCell::new(document                  
-        .get_element_by_id("root")
-        .unwrap()
-        .dyn_into::<HtmlCanvasElement>()
-        .unwrap()));
+    let canvas = Rc::new(RefCell::new(
+        document
+            .get_element_by_id("canvas")
+            .unwrap()
+            .dyn_into::<HtmlCanvasElement>()
+            .unwrap(),
+    ));
 
     canvas.borrow().set_width(600);
     canvas.borrow().set_height(400);
-    let ctx = Rc::new(RefCell::new(canvas.borrow()
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<CanvasRenderingContext2d>()
-        .unwrap()));
 
-    draw_cells(&ctx.borrow());
-    draw_snake(&ctx.borrow(), &core.borrow());
+    let context = Rc::new(RefCell::new(
+        canvas
+            .borrow()
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()
+            .unwrap(),
+    ));
+
+    {
+        // First frame
+        let context = context.borrow();
+        let snake = &core.borrow().snake;
+        draw_cells(&context);
+        draw_snake(&context, &snake);
+    }
 
     let keyboard_handler = Closure::wrap(Box::new(move |e: KeyboardEvent| {
+        let context = context.borrow();
+        let snake = &mut core.borrow_mut().snake;
         match e.key().as_str() {
-            "ArrowUp" => core.borrow_mut().snake.move_to(Direction::Up),
-            "ArrowDown" => core.borrow_mut().snake.move_to(Direction::Down),
-            "ArrowRight" => core.borrow_mut().snake.move_to(Direction::Right),
-            "ArrowLeft" => core.borrow_mut().snake.move_to(Direction::Left),
+            "ArrowUp" => snake.move_to(Direction::Up),
+            "ArrowDown" => snake.move_to(Direction::Down),
+            "ArrowRight" => snake.move_to(Direction::Right),
+            "ArrowLeft" => snake.move_to(Direction::Left),
             _ => (),
         }
-        ctx.borrow().clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
-        draw_cells(&ctx.borrow());
-        draw_snake(&ctx.borrow(), &core.borrow());
+        context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
+        draw_cells(&context);
+        draw_snake(&context, &snake);
     }) as Box<dyn FnMut(_)>);
 
     document
@@ -184,19 +196,33 @@ pub fn run() {
     keyboard_handler.forget();
 }
 
-fn draw_cells(ctx: &CanvasRenderingContext2d) -> () {
+fn draw_cells(context: &CanvasRenderingContext2d) {
     for y in 0..10 {
         for x in 0..10 {
-            ctx.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
-            ctx.stroke_rect((x*40) as f64, (y*40) as f64, 40f64, 40f64);
+            context.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
+            context.stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
         }
     }
 }
 
-fn draw_snake(ctx: &CanvasRenderingContext2d, core: &Core) -> () {
-    for c in core.snake.cells.iter() {
-        ctx.set_fill_style(&JsValue::from_str("rgb(30, 200, 30)"));
-        ctx.fill_rect((c.coords.x*40) as f64, (c.coords.y*40) as f64, 40f64, 40f64);
+fn draw_snake(context: &CanvasRenderingContext2d, snake: &Snake) {
+    for c in snake.cells.iter() {
+        context.set_fill_style(&JsValue::from_str("rgb(30, 200, 30)"));
+        context.fill_rect(
+            (c.coords.x * 40) as f64,
+            (c.coords.y * 40) as f64,
+            40f64,
+            40f64,
+        );
     }
 }
 
+fn window() -> web_sys::Window {
+    web_sys::window().expect("No global 'window' exist!")
+}
+
+fn document() -> web_sys::Document {
+    window()
+        .document()
+        .expect("Should have a document on a window!")
+}
