@@ -1,11 +1,15 @@
+extern crate console_error_panic_hook;
+
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
 
 use std::cell::RefCell;
+use std::panic;
 use std::rc::Rc;
 
 struct Core {
     snake: Snake,
+    context: CanvasRenderingContext2d,
 }
 
 struct Snake {
@@ -25,10 +29,24 @@ struct Cell {
 }
 
 impl Core {
-    fn setup() -> Self {
+    fn setup(canvas: &HtmlCanvasElement) -> Self {
+        let context = canvas
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<CanvasRenderingContext2d>()
+            .unwrap();
         Self {
             snake: Snake::new(),
+            context,
         }
+    }
+
+    fn next(&mut self) {
+        self.snake.move_to();
+        self.context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
+        draw_cells(&self.context);
+        draw_snake(&self.context, &self.snake);
     }
 }
 
@@ -46,20 +64,14 @@ impl Snake {
         }
     }
 
-    fn move_to(&mut self, d: Direction) -> () {
+    fn move_to(&mut self) -> () {
+        log(format!("ABC").as_str());
         let mut prev_cell_coords = Coords::new(-1, -1);
-        if !self.direction.is_same_or_opposite(&d) {
-            self.direction = d.clone();
-        }
         for c in self.cells.iter_mut() {
             match c.r#type {
                 CellType::Head => {
                     prev_cell_coords = c.coords;
-                    if self.direction.is_same_or_opposite(&d) {
-                        c.move_at(c.coords + self.direction.value());
-                    } else {
-                        c.move_at(c.coords + d.value());
-                    }
+                    c.move_at(c.coords + self.direction.value());
                 }
                 CellType::Middle | CellType::Tail => {
                     let tmp = c.coords;
@@ -67,6 +79,12 @@ impl Snake {
                     prev_cell_coords = tmp;
                 }
             }
+        }
+    }
+
+    fn change_direction(&mut self, d: Direction) {
+        if !self.direction.is_same_or_opposite(&d) {
+            self.direction = d;
         }
     }
 }
@@ -107,14 +125,13 @@ impl std::ops::AddAssign<Coords> for Coords {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 enum Direction {
     Up,
     Down,
     Right,
     Left,
 }
-
 enum CellType {
     Head,
     Middle,
@@ -136,10 +153,15 @@ impl Direction {
     }
 }
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
 #[wasm_bindgen(start)]
 pub fn run() {
-    let core = Rc::new(RefCell::new(Core::setup()));
-
+    panic::set_hook(Box::new(console_error_panic_hook::hook));
     let document = document();
 
     let canvas = Rc::new(RefCell::new(
@@ -153,37 +175,44 @@ pub fn run() {
     canvas.borrow().set_width(600);
     canvas.borrow().set_height(400);
 
-    let context = Rc::new(RefCell::new(
-        canvas
-            .borrow()
-            .get_context("2d")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<CanvasRenderingContext2d>()
-            .unwrap(),
-    ));
-
+    let core = Rc::new(RefCell::new(Core::setup(&canvas.borrow())));
+    let core_for_animation_frame_handler = core.clone();
+    let core_for_keyboard_handler = core.clone();
     {
         // First frame
-        let context = context.borrow();
+        let context = &core.borrow().context;
         let snake = &core.borrow().snake;
         draw_cells(&context);
         draw_snake(&context, &snake);
     }
 
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
+    {
+        let mut i = 0;
+        *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+            let mut core = core_for_animation_frame_handler.borrow_mut();
+            i += 1;
+            if i % 60 == 0 {
+                core.next();
+            }
+            request_animation_frame(f.borrow().as_ref().unwrap());
+        }) as Box<dyn FnMut()>));
+    }
+
+    request_animation_frame(g.borrow().as_ref().unwrap());
+
     let keyboard_handler = Closure::wrap(Box::new(move |e: KeyboardEvent| {
-        let context = context.borrow();
-        let snake = &mut core.borrow_mut().snake;
+        let mut core = core_for_keyboard_handler.borrow_mut();
+        let snake = &mut core.snake;
         match e.key().as_str() {
-            "ArrowUp" => snake.move_to(Direction::Up),
-            "ArrowDown" => snake.move_to(Direction::Down),
-            "ArrowRight" => snake.move_to(Direction::Right),
-            "ArrowLeft" => snake.move_to(Direction::Left),
+            "ArrowUp" => snake.change_direction(Direction::Up),
+            "ArrowDown" => snake.change_direction(Direction::Down),
+            "ArrowRight" => snake.change_direction(Direction::Right),
+            "ArrowLeft" => snake.change_direction(Direction::Left),
             _ => (),
         }
-        context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
-        draw_cells(&context);
-        draw_snake(&context, &snake);
     }) as Box<dyn FnMut(_)>);
 
     document
@@ -225,4 +254,10 @@ fn document() -> web_sys::Document {
     window()
         .document()
         .expect("Should have a document on a window!")
+}
+
+fn request_animation_frame(f: &Closure<dyn FnMut()>) -> i32 {
+    window()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .unwrap()
 }
