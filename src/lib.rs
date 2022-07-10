@@ -56,6 +56,9 @@ impl Core {
         self.context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
         draw_cells(&self.context);
         draw_snake(&self.context, &self.snake);
+        if self.snake.head().coords == self.food.as_ref().unwrap().coords {
+            self.gen_food();
+        }
         if let Some(food) = &self.food {
             draw_food(&self.context, food);
         }
@@ -84,6 +87,10 @@ impl Snake {
             direction: Direction::Right,
             next_direction: Direction::Right,
         }
+    }
+
+    fn head(&self) -> &Cell {
+        &self.cells[0]
     }
 
     fn move_to(&mut self) -> () {
