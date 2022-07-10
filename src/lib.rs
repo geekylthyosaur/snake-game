@@ -2,6 +2,8 @@ extern crate console_error_panic_hook;
 
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
+use rand::Rng;
+use rand::distributions::{Distribution, Standard};
 
 use std::cell::RefCell;
 use std::panic;
@@ -9,6 +11,7 @@ use std::rc::Rc;
 
 struct Core {
     snake: Snake,
+    food: Option<Food>,
     context: CanvasRenderingContext2d,
 }
 
@@ -16,6 +19,10 @@ struct Snake {
     cells: Vec<Cell>,
     direction: Direction,
     next_direction: Direction,
+}
+
+struct Food {
+    coords: Coords,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -39,6 +46,7 @@ impl Core {
             .unwrap();
         Self {
             snake: Snake::new(),
+            food: None,
             context,
         }
     }
@@ -48,6 +56,18 @@ impl Core {
         self.context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
         draw_cells(&self.context);
         draw_snake(&self.context, &self.snake);
+        if let Some(food) = &self.food {
+            draw_food(&self.context, food);
+        }
+    }
+
+    fn gen_food(&mut self) {
+        let cells_coords: Vec<Coords> = self.snake.cells.iter().map(|c| c.coords).collect();
+        let mut food = Food::new();
+        while cells_coords.contains(&food.coords) {
+            food = Food::new();
+        }
+        self.food = Some(food);
     }
 }
 
@@ -91,6 +111,13 @@ impl Snake {
     }
 }
 
+impl Food {
+    fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        Self { coords: rng.gen::<Coords>() }
+    }
+}
+
 impl Cell {
     fn new(r#type: CellType, coords: Coords) -> Self {
         Self { r#type, coords }
@@ -123,6 +150,18 @@ impl std::ops::AddAssign<Coords> for Coords {
         *self = Self {
             x: self.x + other.x,
             y: self.y + other.y,
+        }
+    }
+}
+
+impl Distribution<Coords> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Coords {
+        let rand_x = rng.gen_range(0..10);
+        let rand_y = rng.gen_range(0..10);
+        log(format!("{} {}", rand_x, rand_y).as_str());
+        Coords {
+            x: rand_x,
+            y: rand_y,
         }
     }
 }
@@ -181,10 +220,14 @@ pub fn run() {
     let core_for_keyboard_handler = core.clone();
     {
         // First frame
+        core.borrow_mut().gen_food();
         let context = &core.borrow().context;
         let snake = &core.borrow().snake;
         draw_cells(&context);
         draw_snake(&context, &snake);
+        if let Some(food) = &core.borrow().food {
+            draw_food(&context, &food);
+        }
     }
 
     let f = Rc::new(RefCell::new(None));
@@ -244,6 +287,16 @@ fn draw_snake(context: &CanvasRenderingContext2d, snake: &Snake) {
             40f64,
         );
     }
+}
+
+fn draw_food(context: &CanvasRenderingContext2d, f: &Food) {
+    context.set_fill_style(&JsValue::from_str("rgb(200, 30, 30)"));
+    context.fill_rect(
+        (f.coords.x * 40) as f64,
+        (f.coords.y * 40) as f64,
+        40f64,
+        40f64,
+    );
 }
 
 fn window() -> web_sys::Window {
