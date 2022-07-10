@@ -274,9 +274,6 @@ function getImports() {
         const ret = getStringFromWasm0(arg0, arg1);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_log_5fb5568e7f5191d3 = function(arg0, arg1) {
-        console.log(getStringFromWasm0(arg0, arg1));
-    };
     imports.wbg.__wbg_instanceof_Window_a2a08d3918d7d4d0 = function(arg0) {
         const ret = getObject(arg0) instanceof Window;
         return ret;
@@ -396,11 +393,11 @@ function getImports() {
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper52 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper51 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 19, __wbg_adapter_16);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper54 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper53 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 19, __wbg_adapter_19);
         return addHeapObject(ret);
     };
@@ -435,7 +432,7 @@ function initSync(bytes) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('snake-game-1e300608ab5fbeea_bg.wasm', import.meta.url);
+        input = new URL('snake-game-bf74ec3162527d46_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
