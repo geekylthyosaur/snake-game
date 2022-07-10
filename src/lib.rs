@@ -58,6 +58,7 @@ impl Core {
         draw_snake(&self.context, &self.snake);
         if self.snake.head().coords == self.food.as_ref().unwrap().coords {
             self.gen_food();
+            self.snake.grow();
         }
         if let Some(food) = &self.food {
             draw_food(&self.context, food);
@@ -79,10 +80,10 @@ impl Snake {
         Self {
             cells: vec![
                 Cell::new(CellType::Head, Coords::new(4, 0)),
-                Cell::new(CellType::Middle, Coords::new(3, 0)),
-                Cell::new(CellType::Middle, Coords::new(2, 0)),
-                Cell::new(CellType::Middle, Coords::new(1, 0)),
-                Cell::new(CellType::Tail, Coords::new(0, 0)),
+                Cell::new(CellType::Other, Coords::new(3, 0)),
+                Cell::new(CellType::Other, Coords::new(2, 0)),
+                Cell::new(CellType::Other, Coords::new(1, 0)),
+                Cell::new(CellType::Other, Coords::new(0, 0)),
             ],
             direction: Direction::Right,
             next_direction: Direction::Right,
@@ -91,6 +92,10 @@ impl Snake {
 
     fn head(&self) -> &Cell {
         &self.cells[0]
+    }
+    
+    fn grow(&mut self) {
+        self.cells.push(Cell::new(CellType::Other, Coords::new(-1, -1)));
     }
 
     fn move_to(&mut self) -> () {
@@ -102,7 +107,7 @@ impl Snake {
                     prev_cell_coords = c.coords;
                     c.move_at(c.coords + self.direction.value());
                 }
-                CellType::Middle | CellType::Tail => {
+                CellType::Other => {
                     let tmp = c.coords;
                     c.move_at(prev_cell_coords);
                     prev_cell_coords = tmp;
@@ -182,8 +187,7 @@ enum Direction {
 }
 enum CellType {
     Head,
-    Middle,
-    Tail,
+    Other,
 }
 
 impl Direction {
