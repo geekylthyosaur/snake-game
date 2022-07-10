@@ -7,13 +7,10 @@ use std::cell::RefCell;
 use std::panic;
 use std::rc::Rc;
 
-use crate::{
-    core::Core,
-    utils::Direction,
-};
+use crate::{core::Core, utils::Direction};
 
-mod snake;
 mod core;
+mod snake;
 mod utils;
 
 #[wasm_bindgen]

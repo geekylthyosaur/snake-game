@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::utils::{Direction, Coords};
+use crate::utils::{Coords, Direction};
 
 pub struct Snake {
     pub cells: Vec<Cell>,

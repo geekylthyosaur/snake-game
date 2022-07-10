@@ -1,7 +1,10 @@
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-use super::{snake::{Snake, Food}, utils::Coords};
+use super::{
+    snake::{Food, Snake},
+    utils::Coords,
+};
 
 pub struct Core {
     pub snake: Snake,
@@ -87,4 +90,3 @@ fn draw_food(context: &CanvasRenderingContext2d, f: &Food) {
         40f64,
     );
 }
-
