@@ -15,6 +15,7 @@ struct Core {
 struct Snake {
     cells: Vec<Cell>,
     direction: Direction,
+    next_direction: Direction,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -61,12 +62,13 @@ impl Snake {
                 Cell::new(CellType::Tail, Coords::new(0, 0)),
             ],
             direction: Direction::Right,
+            next_direction: Direction::Right,
         }
     }
 
     fn move_to(&mut self) -> () {
-        log(format!("ABC").as_str());
         let mut prev_cell_coords = Coords::new(-1, -1);
+        self.direction = self.next_direction;
         for c in self.cells.iter_mut() {
             match c.r#type {
                 CellType::Head => {
@@ -84,7 +86,7 @@ impl Snake {
 
     fn change_direction(&mut self, d: Direction) {
         if !self.direction.is_same_or_opposite(&d) {
-            self.direction = d;
+            self.next_direction = d;
         }
     }
 }
@@ -125,7 +127,7 @@ impl std::ops::AddAssign<Coords> for Coords {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 enum Direction {
     Up,
     Down,
@@ -176,7 +178,6 @@ pub fn run() {
     canvas.borrow().set_height(400);
 
     let core = Rc::new(RefCell::new(Core::setup(&canvas.borrow())));
-    let core_for_animation_frame_handler = core.clone();
     let core_for_keyboard_handler = core.clone();
     {
         // First frame
@@ -192,10 +193,9 @@ pub fn run() {
     {
         let mut i = 0;
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-            let mut core = core_for_animation_frame_handler.borrow_mut();
             i += 1;
             if i % 60 == 0 {
-                core.next();
+                core.borrow_mut().next();
             }
             request_animation_frame(f.borrow().as_ref().unwrap());
         }) as Box<dyn FnMut()>));
