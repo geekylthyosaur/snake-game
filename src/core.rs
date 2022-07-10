@@ -19,7 +19,7 @@ impl Core {
             .unwrap()
             .dyn_into::<HtmlCanvasElement>()
             .unwrap();
-        canvas.set_width(600);
+        canvas.set_width(400);
         canvas.set_height(400);
         let context = canvas
             .get_context("2d")
@@ -89,14 +89,28 @@ fn draw_cell(context: &CanvasRenderingContext2d, c: &Cell) {
         40f64,
         40f64,
     );
+    context.set_fill_style(&JsValue::from_str("rgb(100, 200, 100)"));
+    context.fill_rect(
+        (c.coords.x * 40 + 2) as f64,
+        (c.coords.y * 40 + 2) as f64,
+        36f64,
+        36f64,
+    );
 }
 
 fn draw_food(context: &CanvasRenderingContext2d, f: &Food) {
-    context.set_fill_style(&JsValue::from_str("rgb(200, 30, 30)"));
+    context.set_fill_style(&JsValue::from_str("rgb(200, 70, 70)"));
     context.fill_rect(
         (f.coords.x * 40) as f64,
         (f.coords.y * 40) as f64,
         40f64,
         40f64,
+    );
+    context.set_fill_style(&JsValue::from_str("rgb(200, 30, 30)"));
+    context.fill_rect(
+        (f.coords.x * 40 + 2) as f64,
+        (f.coords.y * 40 + 2) as f64,
+        36f64,
+        36f64,
     );
 }
