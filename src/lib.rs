@@ -1,219 +1,20 @@
 extern crate console_error_panic_hook;
 
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
-use rand::Rng;
-use rand::distributions::{Distribution, Standard};
+use web_sys::{HtmlCanvasElement, KeyboardEvent};
 
 use std::cell::RefCell;
 use std::panic;
 use std::rc::Rc;
 
-struct Core {
-    snake: Snake,
-    food: Option<Food>,
-    context: CanvasRenderingContext2d,
-}
+use crate::{
+    core::Core,
+    utils::Direction,
+};
 
-struct Snake {
-    cells: Vec<Cell>,
-    direction: Direction,
-    next_direction: Direction,
-}
-
-struct Food {
-    coords: Coords,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-struct Coords {
-    x: i32,
-    y: i32,
-}
-
-struct Cell {
-    r#type: CellType,
-    coords: Coords,
-}
-
-impl Core {
-    fn setup(canvas: &HtmlCanvasElement) -> Self {
-        let context = canvas
-            .get_context("2d")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<CanvasRenderingContext2d>()
-            .unwrap();
-        Self {
-            snake: Snake::new(),
-            food: None,
-            context,
-        }
-    }
-
-    fn next(&mut self) {
-        self.snake.move_to();
-        self.context.clear_rect(0f64, 0f64, 600 as f64, 400 as f64);
-        draw_cells(&self.context);
-        draw_snake(&self.context, &self.snake);
-        if self.snake.head().coords == self.food.as_ref().unwrap().coords {
-            self.gen_food();
-            self.snake.grow();
-        }
-        if let Some(food) = &self.food {
-            draw_food(&self.context, food);
-        }
-    }
-    
-    fn check_collision(&self) -> bool {
-        let cells_coords: Vec<Coords> = self.snake.cells.iter().map(|c| c.coords).collect();
-        if let Some((_, cells_except_head_coords)) = cells_coords.split_first() {
-            return cells_except_head_coords.contains(&self.snake.head().coords)
-        } else { false }
-    }
-
-    fn gen_food(&mut self) {
-        let cells_coords: Vec<Coords> = self.snake.cells.iter().map(|c| c.coords).collect();
-        let mut food = Food::new();
-        while cells_coords.contains(&food.coords) {
-            food = Food::new();
-        }
-        self.food = Some(food);
-    }
-}
-
-impl Snake {
-    fn new() -> Self {
-        Self {
-            cells: vec![
-                Cell::new(CellType::Head, Coords::new(4, 0)),
-                Cell::new(CellType::Other, Coords::new(3, 0)),
-                Cell::new(CellType::Other, Coords::new(2, 0)),
-                Cell::new(CellType::Other, Coords::new(1, 0)),
-                Cell::new(CellType::Other, Coords::new(0, 0)),
-            ],
-            direction: Direction::Right,
-            next_direction: Direction::Right,
-        }
-    }
-
-    fn head(&self) -> &Cell {
-        &self.cells[0]
-    }
-    
-    fn grow(&mut self) {
-        self.cells.push(Cell::new(CellType::Other, Coords::new(-1, -1)));
-    }
-
-    fn move_to(&mut self) -> () {
-        let mut prev_cell_coords = Coords::new(-1, -1);
-        self.direction = self.next_direction;
-        for c in self.cells.iter_mut() {
-            match c.r#type {
-                CellType::Head => {
-                    prev_cell_coords = c.coords;
-                    c.move_at(c.coords + self.direction.value());
-                }
-                CellType::Other => {
-                    let tmp = c.coords;
-                    c.move_at(prev_cell_coords);
-                    prev_cell_coords = tmp;
-                }
-            }
-        }
-    }
-
-    fn change_direction(&mut self, d: Direction) {
-        if !self.direction.is_same_or_opposite(&d) {
-            self.next_direction = d;
-        }
-    }
-}
-
-impl Food {
-    fn new() -> Self {
-        let mut rng = rand::thread_rng();
-        Self { coords: rng.gen::<Coords>() }
-    }
-}
-
-impl Cell {
-    fn new(r#type: CellType, coords: Coords) -> Self {
-        Self { r#type, coords }
-    }
-
-    fn move_at(&mut self, mut c: Coords) -> () {
-        if c.x < 0 { c.x = 9; }
-        if c.y < 0 { c.y = 9; }
-        if c.x > 9 { c.x = 0; }
-        if c.y > 9 { c.y = 0; }
-        self.coords = c;
-    }
-}
-
-impl Coords {
-    fn new(x: i32, y: i32) -> Self {
-        Self { x, y }
-    }
-}
-
-impl std::ops::Add<Coords> for Coords {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl std::ops::AddAssign<Coords> for Coords {
-    fn add_assign(&mut self, other: Self) {
-        *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl Distribution<Coords> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Coords {
-        let rand_x = rng.gen_range(0..10);
-        let rand_y = rng.gen_range(0..10);
-        Coords {
-            x: rand_x,
-            y: rand_y,
-        }
-    }
-}
-
-#[derive(PartialEq, Clone, Copy)]
-enum Direction {
-    Up,
-    Down,
-    Right,
-    Left,
-}
-enum CellType {
-    Head,
-    Other,
-}
-
-impl Direction {
-    fn is_same_or_opposite(&self, other: &Self) -> bool {
-        self == other || self.value() + other.value() == Coords::new(0, 0)
-    }
-
-    fn value(&self) -> Coords {
-        match self {
-            Self::Up => Coords::new(0, -1),
-            Self::Down => Coords::new(0, 1),
-            Self::Right => Coords::new(1, 0),
-            Self::Left => Coords::new(-1, 0),
-        }
-    }
-}
+mod snake;
+mod core;
+mod utils;
 
 #[wasm_bindgen]
 extern "C" {
@@ -255,7 +56,9 @@ pub fn run() {
             if i % 60 == 0 {
                 core.borrow_mut().next();
             }
-            if core.borrow().check_collision() { return; }
+            if core.borrow().check_collision() {
+                return;
+            }
             request_animation_frame(f.borrow().as_ref().unwrap());
         }) as Box<dyn FnMut()>));
     }
@@ -282,37 +85,6 @@ pub fn run() {
         .unwrap();
 
     keyboard_handler.forget();
-}
-
-fn draw_cells(context: &CanvasRenderingContext2d) {
-    for y in 0..10 {
-        for x in 0..10 {
-            context.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
-            context.stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
-        }
-    }
-}
-
-fn draw_snake(context: &CanvasRenderingContext2d, snake: &Snake) {
-    for c in snake.cells.iter() {
-        context.set_fill_style(&JsValue::from_str("rgb(30, 200, 30)"));
-        context.fill_rect(
-            (c.coords.x * 40) as f64,
-            (c.coords.y * 40) as f64,
-            40f64,
-            40f64,
-        );
-    }
-}
-
-fn draw_food(context: &CanvasRenderingContext2d, f: &Food) {
-    context.set_fill_style(&JsValue::from_str("rgb(200, 30, 30)"));
-    context.fill_rect(
-        (f.coords.x * 40) as f64,
-        (f.coords.y * 40) as f64,
-        40f64,
-        40f64,
-    );
 }
 
 fn window() -> web_sys::Window {
