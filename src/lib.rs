@@ -29,6 +29,8 @@ pub fn run() {
     let core = Rc::new(RefCell::new(Core::new()));
     let core_for_keyboard_handler = core.clone();
 
+    core.borrow_mut().generate_food();
+
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
