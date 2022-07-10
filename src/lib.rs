@@ -64,6 +64,13 @@ impl Core {
             draw_food(&self.context, food);
         }
     }
+    
+    fn check_collision(&self) -> bool {
+        let cells_coords: Vec<Coords> = self.snake.cells.iter().map(|c| c.coords).collect();
+        if let Some((_, cells_except_head_coords)) = cells_coords.split_first() {
+            return cells_except_head_coords.contains(&self.snake.head().coords)
+        } else { false }
+    }
 
     fn gen_food(&mut self) {
         let cells_coords: Vec<Coords> = self.snake.cells.iter().map(|c| c.coords).collect();
@@ -170,7 +177,6 @@ impl Distribution<Coords> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Coords {
         let rand_x = rng.gen_range(0..10);
         let rand_y = rng.gen_range(0..10);
-        log(format!("{} {}", rand_x, rand_y).as_str());
         Coords {
             x: rand_x,
             y: rand_y,
@@ -245,6 +251,7 @@ pub fn run() {
             if i % 60 == 0 {
                 core.borrow_mut().next();
             }
+            if core.borrow().check_collision() { return; }
             request_animation_frame(f.borrow().as_ref().unwrap());
         }) as Box<dyn FnMut()>));
     }
