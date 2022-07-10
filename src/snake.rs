@@ -32,8 +32,12 @@ impl Snake {
         }
     }
 
-    pub fn head(&self) -> &Cell {
+    pub fn get_head(&self) -> &Cell {
         &self.cells[0]
+    }
+
+    pub fn get_cell_coords(&self) -> Vec<Coords> {
+        self.cells.iter().map(|c| c.coords).collect::<Vec<Coords>>()
     }
 
     pub fn grow(&mut self) {
@@ -41,18 +45,18 @@ impl Snake {
             .push(Cell::new(CellType::Other, Coords::new(-1, -1)));
     }
 
-    pub fn move_to(&mut self) -> () {
+    pub fn r#move(&mut self) -> () {
         let mut prev_cell_coords = Coords::new(-1, -1);
         self.direction = self.next_direction;
         for c in self.cells.iter_mut() {
             match c.r#type {
                 CellType::Head => {
                     prev_cell_coords = c.coords;
-                    c.move_at(c.coords + self.direction.value());
+                    c.move_to(c.coords + self.direction.value());
                 }
                 CellType::Other => {
                     let tmp = c.coords;
-                    c.move_at(prev_cell_coords);
+                    c.move_to(prev_cell_coords);
                     prev_cell_coords = tmp;
                 }
             }
@@ -80,7 +84,7 @@ impl Cell {
         Self { r#type, coords }
     }
 
-    pub fn move_at(&mut self, mut c: Coords) -> () {
+    pub fn move_to(&mut self, mut c: Coords) -> () {
         if c.x < 0 {
             c.x = 9;
         }
