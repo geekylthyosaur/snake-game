@@ -221,13 +221,7 @@ pub fn run() {
     {
         // First frame
         core.borrow_mut().gen_food();
-        let context = &core.borrow().context;
-        let snake = &core.borrow().snake;
-        draw_cells(&context);
-        draw_snake(&context, &snake);
-        if let Some(food) = &core.borrow().food {
-            draw_food(&context, &food);
-        }
+        core.borrow_mut().next();
     }
 
     let f = Rc::new(RefCell::new(None));
