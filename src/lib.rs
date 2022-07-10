@@ -142,7 +142,11 @@ impl Cell {
         Self { r#type, coords }
     }
 
-    fn move_at(&mut self, c: Coords) -> () {
+    fn move_at(&mut self, mut c: Coords) -> () {
+        if c.x < 0 { c.x = 9; }
+        if c.y < 0 { c.y = 9; }
+        if c.x > 9 { c.x = 0; }
+        if c.y > 9 { c.y = 0; }
         self.coords = c;
     }
 }
