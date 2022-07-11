@@ -11,6 +11,16 @@ impl Coords {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
+
+    pub fn direction(&self) -> Option<Direction> {
+        match (self.x, self.y) {
+            (x, y) if x == 0 && y == 1 => Some(Direction::Up),
+            (x, y) if x == 0 && y == -1 => Some(Direction::Down),
+            (x, y) if x == -1 && y == 0 => Some(Direction::Right),
+            (x, y) if x == 1 && y == 0 => Some(Direction::Left),
+            (_, _) => return None,
+        }
+    }
 }
 
 impl std::ops::Add<Coords> for Coords {
@@ -33,6 +43,14 @@ impl std::ops::AddAssign<Coords> for Coords {
     }
 }
 
+impl std::ops::Sub<Coords> for Coords {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Self { x: self.x - other.x, y: self.y - other.y }
+    }
+}
+
 impl Distribution<Coords> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Coords {
         let rand_x = rng.gen_range(0..10);
@@ -44,7 +62,7 @@ impl Distribution<Coords> for Standard {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Direction {
     Up,
     Down,

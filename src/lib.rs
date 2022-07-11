@@ -36,10 +36,10 @@ pub fn run() {
 
     let mut i = 0;
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        if i % 60 == 0 {
+        if i % 40 == 0 {
             core.borrow_mut().move_snake();
-            core.borrow().render();
         }
+        core.borrow().render(i % 40);
         if core.borrow().check_collision() {
             return;
         }
