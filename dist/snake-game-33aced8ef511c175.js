@@ -467,11 +467,11 @@ function getImports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper67 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper68 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 7, __wbg_adapter_22);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper69 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper70 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 7, __wbg_adapter_25);
         return addHeapObject(ret);
     };
@@ -506,7 +506,7 @@ function initSync(bytes) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('snake-game-3cb85225e9e07345_bg.wasm', import.meta.url);
+        input = new URL('snake-game-33aced8ef511c175_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
