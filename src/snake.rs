@@ -22,10 +22,7 @@ impl Snake {
     pub fn new() -> Self {
         Self {
             cells: vec![
-                Cell::new(CellType::Head, Coords::new(4, 0), Direction::Right),
-                Cell::new(CellType::Middle, Coords::new(3, 0), Direction::Right),
-                Cell::new(CellType::Middle, Coords::new(2, 0), Direction::Right),
-                Cell::new(CellType::Middle, Coords::new(1, 0), Direction::Right),
+                Cell::new(CellType::Head, Coords::new(0, 0), Direction::Right),
                 Cell::new(CellType::Tail, Coords::new(0, 0), Direction::Right),
             ],
             direction: Direction::Right,
@@ -34,38 +31,44 @@ impl Snake {
     }
 
     pub fn get_head(&self) -> &Cell {
-        &self.cells[0]
+        self.cells.first().unwrap()
     }
 
-    pub fn get_cell_coords(&self) -> Vec<Coords> {
-        self.cells.iter().map(|c| c.coords).collect::<Vec<Coords>>()
+    pub fn get_translated_cell_coords(&self, map_size: i32) -> Vec<Coords> {
+        self.cells
+            .iter()
+            .map(|c| c.coords.translate(map_size))
+            .collect::<Vec<Coords>>()
     }
 
     pub fn grow(&mut self) {
         self.cells.last_mut().unwrap().r#type = CellType::Middle;
-        let d = self.cells.last().unwrap().direction;
-        self.cells
-            .push(Cell::new(CellType::Tail, self.cells.last().unwrap().coords - self.cells.last().unwrap().direction.value(), d));
+        let last_cell = self.cells.last().unwrap();
+        self.cells.push(Cell::new(
+            CellType::Tail,
+            last_cell.coords,
+            last_cell.direction,
+        ));
     }
 
     pub fn r#move(&mut self) -> () {
         let mut prev_cell_coords = Coords::new(-1, -1);
         self.direction = self.next_direction;
-        let mut iter = self.cells.iter_mut().peekable(); 
+        let mut iter = self.cells.iter_mut().peekable();
         while let Some(c) = iter.next() {
             match c.r#type {
                 CellType::Head => {
-                    if let Some(c) = iter.peek_mut() {
-                        c.direction = self.direction;
+                    if let Some(next_cell) = iter.peek_mut() {
+                        next_cell.direction = self.direction;
                     }
                     c.direction = self.direction;
                     prev_cell_coords = c.coords;
-                    c.move_to(c.coords + self.direction.value());
+                    c.move_to(c.coords + Coords::from(self.direction));
                 }
                 CellType::Middle | CellType::Tail => {
-                    let d = (c.coords - prev_cell_coords).direction().unwrap_or(c.direction);
-                    if let Some(c) = iter.peek_mut() {
-                        c.direction = d;
+                    if let Some(next_cell) = iter.peek_mut() {
+                        let d: Option<Direction> = (c.coords - prev_cell_coords).into();
+                        next_cell.direction = d.unwrap_or(c.direction);
                     }
                     let tmp = c.coords;
                     c.move_to(prev_cell_coords);
@@ -76,7 +79,7 @@ impl Snake {
     }
 
     pub fn change_direction(&mut self, d: Direction) {
-        if !self.direction.is_same_or_opposite(&d) {
+        if !self.direction.is_same_or_opposite(d) {
             self.next_direction = d;
         }
     }
@@ -93,22 +96,14 @@ impl Food {
 
 impl Cell {
     pub fn new(r#type: CellType, coords: Coords, direction: Direction) -> Self {
-        Self { r#type, coords, direction }
+        Self {
+            r#type,
+            coords,
+            direction,
+        }
     }
 
-    pub fn move_to(&mut self, mut c: Coords) -> () {
-        if c.x < 0 {
-            c.x = 9;
-        }
-        if c.y < 0 {
-            c.y = 9;
-        }
-        if c.x > 9 {
-            c.x = 0;
-        }
-        if c.y > 9 {
-            c.y = 0;
-        }
+    pub fn move_to(&mut self, c: Coords) -> () {
         self.coords = c;
     }
 }

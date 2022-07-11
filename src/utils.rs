@@ -12,13 +12,29 @@ impl Coords {
         Self { x, y }
     }
 
-    pub fn direction(&self) -> Option<Direction> {
-        match (self.x, self.y) {
-            (x, y) if x == 0 && y == 1 => Some(Direction::Up),
-            (x, y) if x == 0 && y == -1 => Some(Direction::Down),
-            (x, y) if x == -1 && y == 0 => Some(Direction::Right),
-            (x, y) if x == 1 && y == 0 => Some(Direction::Left),
-            (_, _) => return None,
+    pub fn translate(&self, max: i32) -> Self {
+        Self {
+            x: if self.x % max < 0 {
+                max - self.x.abs() % max
+            } else {
+                self.x % max
+            },
+            y: if self.y % max < 0 {
+                max - self.y.abs() % max
+            } else {
+                self.y % max
+            },
+        }
+    }
+}
+
+impl From<Direction> for Coords {
+    fn from(d: Direction) -> Self {
+        match d {
+            Direction::Up => Coords::new(0, -1),
+            Direction::Down => Coords::new(0, 1),
+            Direction::Right => Coords::new(1, 0),
+            Direction::Left => Coords::new(-1, 0),
         }
     }
 }
@@ -34,20 +50,14 @@ impl std::ops::Add<Coords> for Coords {
     }
 }
 
-impl std::ops::AddAssign<Coords> for Coords {
-    fn add_assign(&mut self, other: Self) {
-        *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
 impl std::ops::Sub<Coords> for Coords {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
-        Self { x: self.x - other.x, y: self.y - other.y }
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
     }
 }
 
@@ -62,7 +72,7 @@ impl Distribution<Coords> for Standard {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Direction {
     Up,
     Down,
@@ -71,16 +81,20 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn is_same_or_opposite(&self, other: &Self) -> bool {
-        self == other || self.value() + other.value() == Coords::new(0, 0)
+    pub fn is_same_or_opposite(self, other: Self) -> bool {
+        let (self_c, other_c): (Coords, Coords) = (self.into(), other.into());
+        self == other || self_c + other_c == Coords::new(0, 0)
     }
+}
 
-    pub fn value(&self) -> Coords {
-        match self {
-            Self::Up => Coords::new(0, -1),
-            Self::Down => Coords::new(0, 1),
-            Self::Right => Coords::new(1, 0),
-            Self::Left => Coords::new(-1, 0),
+impl From<Coords> for Option<Direction> {
+    fn from(c: Coords) -> Self {
+        match (c.x, c.y) {
+            (x, y) if x == 0 && y == 1 => Some(Direction::Up),
+            (x, y) if x == 0 && y == -1 => Some(Direction::Down),
+            (x, y) if x == -1 && y == 0 => Some(Direction::Right),
+            (x, y) if x == 1 && y == 0 => Some(Direction::Left),
+            (_, _) => return None,
         }
     }
 }
