@@ -1,7 +1,7 @@
 extern crate console_error_panic_hook;
 
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{HtmlElement, KeyboardEvent};
+use web_sys::{HtmlCanvasElement, HtmlElement, KeyboardEvent};
 
 use std::cell::RefCell;
 use std::panic;
@@ -26,13 +26,13 @@ extern "C" {
 pub fn run() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    let core = Rc::new(RefCell::new(Core::new()));
-    let core_for_keyboard_handler = core.clone();
-
-    core.borrow_mut().generate_food();
-
-    let f = Rc::new(RefCell::new(None));
-    let g = f.clone();
+    let canvas = document()
+        .get_element_by_id("canvas")
+        .unwrap()
+        .dyn_into::<HtmlCanvasElement>()
+        .unwrap();
+    canvas.set_width(400);
+    canvas.set_height(400);
 
     let score_div = document()
         .get_element_by_id("score")
@@ -40,13 +40,21 @@ pub fn run() {
         .dyn_into::<HtmlElement>()
         .unwrap();
 
+    let core = Rc::new(RefCell::new(Core::new(&canvas)));
+    let core_for_keyboard_handler = core.clone();
+
+    core.borrow_mut().generate_food();
+
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
     let mut i = 0;
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        if i % 40 == 0 {
+        if i % 20 == 0 {
             core.borrow_mut().move_snake();
             score_div.set_inner_text(format!("Score: {}", core.borrow().score).as_str());
         }
-        core.borrow().render(i % 40);
+        core.borrow().render(i % 20, (40 / 20) as f32);
         if core.borrow().check_collision() {
             return;
         }

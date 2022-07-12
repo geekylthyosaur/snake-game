@@ -3,7 +3,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::{
     snake::{Cell, CellType, Food, Snake},
-    utils::{document, Direction},
+    utils::Direction,
 };
 
 pub struct Core {
@@ -14,14 +14,7 @@ pub struct Core {
 }
 
 impl Core {
-    pub fn new() -> Self {
-        let canvas = document()
-            .get_element_by_id("canvas")
-            .unwrap()
-            .dyn_into::<HtmlCanvasElement>()
-            .unwrap();
-        canvas.set_width(400);
-        canvas.set_height(400);
+    pub fn new(canvas: &HtmlCanvasElement) -> Self {
         let context = canvas
             .get_context("2d")
             .unwrap()
@@ -45,10 +38,10 @@ impl Core {
         }
     }
 
-    pub fn render(&self, i: i32) {
+    pub fn render(&self, i: i32, delta: f32) {
         self.context.clear_rect(0f64, 0f64, 400 as f64, 400 as f64);
         draw_cells(&self.context);
-        draw_snake(&self.context, &self.snake, i);
+        draw_snake(&self.context, &self.snake, i, delta);
         draw_food(&self.context, &self.food);
     }
 
@@ -89,13 +82,14 @@ fn draw_cells(context: &CanvasRenderingContext2d) {
     }
 }
 
-fn draw_snake(context: &CanvasRenderingContext2d, s: &Snake, i: i32) {
+fn draw_snake(context: &CanvasRenderingContext2d, s: &Snake, i: i32, delta: f32) {
     for c in s.cells.iter() {
-        draw_cell(context, c, i);
+        draw_cell(context, c, i, delta);
     }
 }
 
-fn draw_cell(context: &CanvasRenderingContext2d, c: &Cell, i: i32) {
+fn draw_cell(context: &CanvasRenderingContext2d, c: &Cell, i: i32, delta: f32) {
+    let i = (i as f32 * delta) as i32;
     context.set_fill_style(&JsValue::from_str("rgb(30, 200, 30)"));
     let translated_c = c.coords.translate(10);
     let (x, y) = (translated_c.x, translated_c.y);
