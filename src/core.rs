@@ -3,7 +3,7 @@ use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
 use crate::{
     snake::{Cell, CellType, Food, Snake},
-    utils::Direction,
+    utils::{Coords, Direction},
 };
 
 pub struct Core {
@@ -91,8 +91,7 @@ fn draw_snake(context: &CanvasRenderingContext2d, s: &Snake, i: i32, delta: f32)
 fn draw_cell(context: &CanvasRenderingContext2d, c: &Cell, i: i32, delta: f32) {
     let i = (i as f32 * delta) as i32;
     context.set_fill_style(&JsValue::from_str("rgb(30, 200, 30)"));
-    let translated_c = c.coords.translate(10);
-    let (x, y) = (translated_c.x, translated_c.y);
+    let Coords { x, y } = c.coords.translate(10);
     let (x, y) = match c.r#type {
         CellType::Head => (
             match c.direction {
