@@ -1,7 +1,7 @@
 extern crate console_error_panic_hook;
 
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::KeyboardEvent;
+use web_sys::{HtmlElement, KeyboardEvent};
 
 use std::cell::RefCell;
 use std::panic;
@@ -34,10 +34,17 @@ pub fn run() {
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+    let score_div = document()
+        .get_element_by_id("score")
+        .unwrap()
+        .dyn_into::<HtmlElement>()
+        .unwrap();
+
     let mut i = 0;
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         if i % 40 == 0 {
             core.borrow_mut().move_snake();
+            score_div.set_inner_text(format!("Score: {}", core.borrow().score).as_str());
         }
         core.borrow().render(i % 40);
         if core.borrow().check_collision() {

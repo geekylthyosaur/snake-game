@@ -10,6 +10,7 @@ pub struct Core {
     pub snake: Snake,
     food: Food,
     context: CanvasRenderingContext2d,
+    pub score: u32,
 }
 
 impl Core {
@@ -31,6 +32,7 @@ impl Core {
             snake: Snake::new(),
             food: Food::new(),
             context,
+            score: 0,
         }
     }
 
@@ -39,6 +41,7 @@ impl Core {
         if self.snake.get_head().coords.translate(10) == self.food.coords {
             self.generate_food();
             self.snake.grow();
+            self.inc_score();
         }
     }
 
@@ -58,6 +61,10 @@ impl Core {
         } else {
             false
         }
+    }
+
+    pub fn inc_score(&mut self) {
+        self.score += 1;
     }
 
     pub fn generate_food(&mut self) {
