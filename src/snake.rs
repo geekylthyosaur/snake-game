@@ -20,10 +20,11 @@ pub struct Cell {
 
 impl Snake {
     pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
         Self {
             cells: vec![
-                Cell::new(CellType::Head, Coords::new(0, 0), Direction::Right),
-                Cell::new(CellType::Tail, Coords::new(0, 0), Direction::Right),
+                Cell::new(CellType::Head, rng.gen::<Coords>(), Direction::Right),
+                Cell::new(CellType::Tail, rng.gen::<Coords>(), Direction::Right),
             ],
             direction: Direction::Right,
             next_direction: Direction::Right,
