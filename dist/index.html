@@ -1,17 +1,40 @@
 <!DOCTYPE html><html><head>
-    <meta charset="utf-8">
-    <title>Snake Game</title>
-  
-<link rel="preload" href="/snake-game/snake-game-33aced8ef511c175_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
-<link rel="modulepreload" href="/snake-game/snake-game-33aced8ef511c175.js"></head>
-  <body>
-    <canvas id="canvas" style="
-		position: absolute;
-		position: fixed;
-  		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-  ">
-  
+        <meta charset="utf-8">
+        <title>Snake Game</title>
+    
+<link rel="preload" href="/snake-game/snake-game-1c404d9244254aad_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/snake-game/snake-game-1c404d9244254aad.js"></head>
+    <body>
+        <div class="root">
+            <canvas id="canvas">
+            </canvas>
+            <div class="info">
+                <div class="controls" id="controls">
+                    <pre> 
+   w▲k
+a⯇h   l⯈d
+   s▼j
+                    </pre>
+                </div>
+                <div class="score" id="score">
+                    SCORE:
+                </div>
+            </div>
+        </div>
+    <style>
+        .root {
+            position: absolute;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+    
 
-</canvas><script type="module">import init from '/snake-game/snake-game-33aced8ef511c175.js';init('/snake-game/snake-game-33aced8ef511c175_bg.wasm');</script></body></html>
+<script type="module">import init from '/snake-game/snake-game-1c404d9244254aad.js';init('/snake-game/snake-game-1c404d9244254aad_bg.wasm');</script></body></html>
