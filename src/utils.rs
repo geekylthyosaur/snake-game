@@ -3,16 +3,16 @@ use rand::Rng;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Coords {
-    pub x: i32,
-    pub y: i32,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl Coords {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: isize, y: isize) -> Self {
         Self { x, y }
     }
 
-    pub fn translate(&self, max: i32) -> Self {
+    pub fn translate(&self, max: isize) -> Self {
         Self {
             x: if self.x % max < 0 {
                 max - self.x.abs() % max

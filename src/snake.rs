@@ -35,7 +35,7 @@ impl Snake {
         self.cells.first().unwrap()
     }
 
-    pub fn get_translated_cell_coords(&self, map_size: i32) -> Vec<Coords> {
+    pub fn get_translated_cell_coords(&self, map_size: isize) -> Vec<Coords> {
         self.cells
             .iter()
             .map(|c| c.coords.translate(map_size))
