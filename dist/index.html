@@ -2,8 +2,8 @@
         <meta charset="utf-8">
         <title>Snake Game</title>
     
-<link rel="preload" href="/snake-game/snake-game-1c404d9244254aad_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
-<link rel="modulepreload" href="/snake-game/snake-game-1c404d9244254aad.js"></head>
+<link rel="preload" href="/snake-game/snake-game-581b24dd644026e1_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/snake-game/snake-game-581b24dd644026e1.js"></head>
     <body>
         <div class="root">
             <canvas id="canvas">
@@ -12,7 +12,7 @@
                 <div class="controls" id="controls">
                     <pre> 
    w▲k
-a⯇h   l⯈d
+a⯇h   d⯈l
    s▼j
                     </pre>
                 </div>
@@ -21,20 +21,24 @@ a⯇h   l⯈d
                 </div>
             </div>
         </div>
-    <style>
-        .root {
-            position: absolute;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-    </style>
+        <style>
+            body {
+                background: #282828;
+                color: white;
+            }
+            .root {
+                position: absolute;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            .info {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+        </style>
     
 
-<script type="module">import init from '/snake-game/snake-game-1c404d9244254aad.js';init('/snake-game/snake-game-1c404d9244254aad_bg.wasm');</script></body></html>
+<script type="module">import init from '/snake-game/snake-game-581b24dd644026e1.js';init('/snake-game/snake-game-581b24dd644026e1_bg.wasm');</script></body></html>
