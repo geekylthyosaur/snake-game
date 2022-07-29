@@ -39,14 +39,20 @@ impl Core {
     }
 
     pub fn render(&self, i: isize, delta: f32) {
-        self.context.clear_rect(0f64, 0f64, 400 as f64, 400 as f64);
+        self.context.clear_rect(0f64, 0f64, 400f64, 400f64);
         draw_cells(&self.context);
         draw_snake(&self.context, &self.snake, i, delta);
         draw_food(&self.context, &self.food);
     }
 
+    pub fn display_lose_msg(&self) {
+        self.context.set_font("64px Geneva");
+        self.context.set_text_align("center");
+        self.context.fill_text("WASTED", 200f64, 200f64).unwrap();
+    }
+
     fn check_eating_condition(&self) -> bool {
-        self.snake.get_head().coords.translate(10) == self.food.coords 
+        self.snake.get_head().coords.translate(10) == self.food.coords
     }
 
     pub fn check_collision(&self) -> bool {

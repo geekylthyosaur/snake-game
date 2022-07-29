@@ -56,6 +56,7 @@ pub fn run() {
         }
         core.borrow().render(i % 20, (40 / 20) as f32);
         if core.borrow().check_collision() {
+            core.borrow().display_lose_msg();
             return;
         }
         i += 1;
