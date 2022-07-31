@@ -40,9 +40,9 @@ impl Core {
 
     pub fn render(&self, i: isize, delta: f32) {
         self.context.clear_rect(0f64, 0f64, 400f64, 400f64);
-        draw_cells(&self.context);
-        draw_snake(&self.context, &self.snake, i, delta);
-        draw_food(&self.context, &self.food);
+        self.draw_cells();
+        self.draw_snake(i, delta);
+        self.draw_food();
     }
 
     pub fn display_lose_msg(&self) {
@@ -81,85 +81,84 @@ impl Core {
         }
         self.food = food;
     }
-}
 
-fn draw_cells(context: &CanvasRenderingContext2d) {
-    for y in 0..10 {
-        for x in 0..10 {
-            context.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
-            context.stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
+    fn draw_cells(&self) {
+        for y in 0..10 {
+            for x in 0..10 {
+                self.context.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
+                self.context.stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
+            }
         }
     }
-}
 
-fn draw_snake(context: &CanvasRenderingContext2d, s: &Snake, i: isize, delta: f32) {
-    for c in s.cells.iter() {
-        draw_cell(context, c, i, delta);
+    fn draw_snake(&self, i: isize, delta: f32) {
+        for c in self.snake.cells.iter() {
+            self.draw_cell(c, i, delta);
+        }
+    }
+
+    fn draw_cell(&self, c: &Cell, i: isize, delta: f32) {
+        let i = (i as f32 * delta) as isize;
+        let Coords { x, y } = c.coords.translate(10);
+        let (x, y) = match c.r#type {
+            CellType::Head => (
+                match c.direction {
+                    Direction::Right => (x - 1) * 40 + i,
+                    Direction::Left => (x + 1) * 40 - i,
+                    _ => x * 40,
+                },
+                match c.direction {
+                    Direction::Up => (y + 1) * 40 - i,
+                    Direction::Down => (y - 1) * 40 + i,
+                    _ => y * 40,
+                },
+            ),
+            CellType::Tail => (
+                match c.direction {
+                    Direction::Right => x * 40 + i,
+                    Direction::Left => x * 40 - i,
+                    _ => x * 40,
+                },
+                match c.direction {
+                    Direction::Up => y * 40 - i,
+                    Direction::Down => y * 40 + i,
+                    _ => y * 40,
+                },
+            ),
+            _ => (x * 40, y * 40),
+        };
+        self.draw_rect(x, y, 40, 40, (30, 200, 30));
+    }
+
+    fn draw_food(&self) {
+        self.draw_rect(
+            self.food.coords.x * 40,
+            self.food.coords.y * 40,
+            40,
+            40,
+            (200, 70, 70),
+        );
+        self.draw_rect(
+            self.food.coords.x * 40 + 2,
+            self.food.coords.y * 40 + 2,
+            36,
+            36,
+            (200, 30, 30),
+        );
+    }
+
+    fn draw_rect(
+        &self,
+        x: isize,
+        y: isize,
+        width: isize,
+        height: isize,
+        style: (u8, u8, u8),
+    ) {
+        self.context.set_fill_style(&JsValue::from_str(
+            format!("rgb({}, {}, {})", style.0, style.1, style.2).as_str(),
+        ));
+        self.context.fill_rect(x as f64, y as f64, width as f64, height as f64);
     }
 }
 
-fn draw_cell(context: &CanvasRenderingContext2d, c: &Cell, i: isize, delta: f32) {
-    let i = (i as f32 * delta) as isize;
-    let Coords { x, y } = c.coords.translate(10);
-    let (x, y) = match c.r#type {
-        CellType::Head => (
-            match c.direction {
-                Direction::Right => (x - 1) * 40 + i,
-                Direction::Left => (x + 1) * 40 - i,
-                _ => x * 40,
-            },
-            match c.direction {
-                Direction::Up => (y + 1) * 40 - i,
-                Direction::Down => (y - 1) * 40 + i,
-                _ => y * 40,
-            },
-        ),
-        CellType::Tail => (
-            match c.direction {
-                Direction::Right => x * 40 + i,
-                Direction::Left => x * 40 - i,
-                _ => x * 40,
-            },
-            match c.direction {
-                Direction::Up => y * 40 - i,
-                Direction::Down => y * 40 + i,
-                _ => y * 40,
-            },
-        ),
-        _ => (x * 40, y * 40),
-    };
-    draw_rect(context, x, y, 40, 40, (30, 200, 30));
-}
-
-fn draw_food(context: &CanvasRenderingContext2d, f: &Food) {
-    draw_rect(
-        context,
-        f.coords.x * 40,
-        f.coords.y * 40,
-        40,
-        40,
-        (200, 70, 70),
-    );
-    draw_rect(
-        context,
-        f.coords.x * 40 + 2,
-        f.coords.y * 40 + 2,
-        36,
-        36,
-        (200, 30, 30),
-    );
-}
-
-fn draw_rect(
-    context: &CanvasRenderingContext2d,
-    x: isize,
-    y: isize,
-    width: isize,
-    height: isize,
-    style: (u8, u8, u8),
-) {
-    context.set_fill_style(&JsValue::from_str(
-        format!("rgb({}, {}, {})", style.0, style.1, style.2).as_str(),
-    ));
-    context.fill_rect(x as f64, y as f64, width as f64, height as f64);
-}
