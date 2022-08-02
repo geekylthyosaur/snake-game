@@ -85,8 +85,10 @@ impl Core {
     fn draw_cells(&self) {
         for y in 0..10 {
             for x in 0..10 {
-                self.context.set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
-                self.context.stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
+                self.context
+                    .set_stroke_style(&JsValue::from_str("rgb(50, 50, 50)"));
+                self.context
+                    .stroke_rect((x * 40) as f64, (y * 40) as f64, 40f64, 40f64);
             }
         }
     }
@@ -95,6 +97,7 @@ impl Core {
         for c in self.snake.cells.iter() {
             self.draw_cell(c, i, delta);
         }
+        self.draw_line(i, delta);
     }
 
     fn draw_cell(&self, c: &Cell, i: isize, delta: f32) {
@@ -130,6 +133,60 @@ impl Core {
         self.draw_rect(x, y, 40, 40, (30, 200, 30));
     }
 
+    fn draw_line(&self, i: isize, delta: f32) {
+        self.context
+            .set_stroke_style(&JsValue::from_str("rgb(0, 0, 0)"));
+        let mut iter = self.snake.cells.iter().peekable();
+        self.context.begin_path();
+        while let Some(c) = iter.next() {
+            let i = (i as f32 * delta) as isize;
+            let Coords { x, y } = c.coords.translate(10);
+            let (x, y) = match c.r#type {
+                CellType::Head => (
+                    match c.direction {
+                        Direction::Right => (x - 1) * 40 + i,
+                        Direction::Left => (x + 1) * 40 - i,
+                        _ => x * 40,
+                    },
+                    match c.direction {
+                        Direction::Up => (y + 1) * 40 - i,
+                        Direction::Down => (y - 1) * 40 + i,
+                        _ => y * 40,
+                    },
+                ),
+                CellType::Tail => (
+                    match c.direction {
+                        Direction::Right => x * 40 + i,
+                        Direction::Left => x * 40 - i,
+                        _ => x * 40,
+                    },
+                    match c.direction {
+                        Direction::Up => y * 40 - i,
+                        Direction::Down => y * 40 + i,
+                        _ => y * 40,
+                    },
+                ),
+                _ => (x * 40, y * 40),
+            };
+            if let Some(n) = iter.peek() {
+                if isize::abs(n.coords.translate(10).x - c.coords.translate(10).x) > 1
+                    || isize::abs(n.coords.translate(10).y - c.coords.translate(10).y) > 1
+                {
+                    self.context.move_to(
+                        (n.coords.translate(10).x * 40 + 18) as f64,
+                        (n.coords.translate(10).y * 40 + 18) as f64,
+                    );
+                } else {
+                    self.context.line_to((x + 18) as f64, (y + 18) as f64);
+                }
+            } else {
+                self.context.line_to((x + 18) as f64, (y + 18) as f64);
+            }
+            self.context.stroke();
+        }
+        self.context.close_path();
+    }
+
     fn draw_food(&self) {
         self.draw_rect(
             self.food.coords.x * 40,
@@ -147,18 +204,11 @@ impl Core {
         );
     }
 
-    fn draw_rect(
-        &self,
-        x: isize,
-        y: isize,
-        width: isize,
-        height: isize,
-        style: (u8, u8, u8),
-    ) {
+    fn draw_rect(&self, x: isize, y: isize, width: isize, height: isize, style: (u8, u8, u8)) {
         self.context.set_fill_style(&JsValue::from_str(
             format!("rgb({}, {}, {})", style.0, style.1, style.2).as_str(),
         ));
-        self.context.fill_rect(x as f64, y as f64, width as f64, height as f64);
+        self.context
+            .fill_rect(x as f64, y as f64, width as f64, height as f64);
     }
 }
-
